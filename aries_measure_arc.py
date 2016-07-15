@@ -28,6 +28,8 @@ parser = argparse.ArgumentParser(description='Reduce arc data from SALT Engineer
 parser.add_argument('arcfile', help='an arcfile to wavelength calibrate')
 parser.add_argument('--list', dest='arc_ref', default='CuArNe.txt', 
                    help='File with list of known arc lines')
+parser.add_argument('--yc', dest='yc', default=121, type=int,
+                   help='Row to extract')
 
 args = parser.parse_args()
 arcfile=args.arcfile
@@ -63,13 +65,14 @@ log = None
 
 data = arc[0].data
 xarr = np.arange(data.shape[1])
-warr = 4000 +  4 * xarr * u.angstrom
+warr = 4000 *u.angstrom +  4 * xarr * u.angstrom
 #warr = rss.get_wavelength(xarr) * u.mm
 #warr = warr.to(u.angstrom)
 
-lmax = data[500].max()
+yc = args.yc
+lmax = data[yc].max()
 swarr, sfarr = st.makeartificial(slines, sfluxes, lmax, res, dres)
-pl.plot(warr, data[500])
+pl.plot(warr, data[yc])
 mask = (swarr > warr.value.min()) * ( swarr < warr.value.max())
 pl.plot(swarr[mask], sfarr[mask])
 #pmel.show()
@@ -81,7 +84,7 @@ ws_init.domain = [xarr.min(), xarr.max()]
 ws = WavelengthSolution.WavelengthSolution(xarr, warr.value, ws_init)
 ws.fit()
 
-istart = data.shape[0]/2.0
+istart = yc
 smask = (slines > warr.value.min()-20) * (slines < warr.value.max()+20)
 iws = InterIdentify(xarr, data, slines[smask], sfluxes[smask], ws, mdiff=mdiff, rstep=rstep,
               function=function, order=order, sigma=thresh, niter=niter, wdiff=wdiff,
@@ -93,11 +96,13 @@ import pickle
 name = os.path.basename(arcfile).replace('fit', 'pkl')
 pickle.dump(iws, open(name, 'w'))
 
+exit()
+
 ws_init = mod.models.Legendre1D(3)
 ws_init.domain = [xarr.min(), xarr.max()]
 ws = WavelengthSolution.WavelengthSolution(xarr, xarr, ws_init)
 ws.fit()
-istart = int(0.5 * len(data))
+istart = arg.yc
 aws = st.arc_straighten(data, istart, ws, rstep=1)
 
 data = st.wave_map(data, aws)
