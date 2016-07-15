@@ -15,6 +15,8 @@ import argparse
 parser = argparse.ArgumentParser(description='Process Aries engineering observationss')
 parser.add_argument('infile', nargs='*', help='File or files to be processed')
 parser.add_argument('--b', dest='bias', help='Master bias file', default=None)
+parser.add_argument('--d', dest='dark', help='Master dark file', default=None)
+parser.add_argument('--f', dest='flat', help='Master flat file', default=None)
 parser.add_argument('-n', dest='cray', default=True, action='store_false', help='Do not cosmic ray clean')
 args = parser.parse_args()
 
@@ -28,10 +30,17 @@ if args.bias:
 else:
    mbias = None
 
+if args.flat: 
+   raise Exception('Flat fielding is not currently implemented')
+if args.dark: 
+   raise Exception('Dark correction is not currently implemented')
+
 for infile in infiles:
     ccd = CCDData.read(infile, unit = u.adu)
     ccd = ccdproc.ccd_process(ccd, oscan='[1117:1181, 1:330]', oscan_median=True, 
-                              trim='[17:1116,1:330]', master_bias=mbias)
+                              trim='[17:1116,1:330]', master_bias=mbias,
+                              error=True, gain=1.0 * u.electron/u.adu, 
+                              readnoise=5.0 * u.electron)
     if args.cray:
        ccd = ccdproc.cosmicray_lacosmic(ccd, sigclip=4.5, sigfrac=0.3,
                    objlim=5.0, gain=1.0, readnoise=6.5,
