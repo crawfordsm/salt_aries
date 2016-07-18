@@ -23,8 +23,9 @@ The specreduce does depend on [PyQt4](https://riverbankcomputing.com/software/py
 
 Suggested method for installing most of the necessary packages via anaconda
 
-    conda create --name aries -y python=2.7 astropy pyqt matplotlib -c astropy ccdproc specutils
+    conda create --name aries -y python=2.7 astropy pyqt matplotlib 
     source activate aries
+    conda install -c astropy ccdproc specutils
     pip install pyspectrograph 
     git clone https://github.com/crawfordsm/specreduce
     cd specreduce
